@@ -18,11 +18,11 @@ Este projeto utiliza **OpenCV**, **MediaPipe** e **PyAutoGUI** para detectar mov
 
 ### 1️⃣ Clonar o Repositório
 
-```bash
+
 git clone https://github.com/seu-usuario/seu-repositorio.git
 cd seu-repositorio
 
-2️⃣ Criar o Ambiente Virtual (venv)
+### 2️⃣ Criar o Ambiente Virtual (venv)
 
 Crie e ative o ambiente virtual com Python 3.10:
 Windows
@@ -35,7 +35,7 @@ Linux / macOS
 python3.10 -m venv venv
 source venv/bin/activate
 
-3️⃣ Instalar Dependências
+### 3️⃣ Instalar Dependências
 
 Crie um arquivo requirements.txt com o seguinte conteúdo:
 
@@ -47,7 +47,7 @@ E depois execute:
 
 pip install -r requirements.txt
 
-▶️ Como Executar
+### ▶️ Como Executar
 
 Após ativar o ambiente virtual e instalar as dependências, execute o script principal (por exemplo, main.py):
 
