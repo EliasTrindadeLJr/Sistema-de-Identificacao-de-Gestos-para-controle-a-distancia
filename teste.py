@@ -9,7 +9,7 @@ from tkinter import Tk, Label, Button, Checkbutton, IntVar, Frame, StringVar
 from tkinter import ttk
 from PIL import Image, ImageTk
 
-# --- MediaPipe ---
+
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 
@@ -18,7 +18,7 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 if not cap.isOpened():
-    print("❌ Erro: não foi possível abrir a câmera.")
+    print("não foi possível abrir a câmera.")
     exit()
 
 hands = mp_hands.Hands(
@@ -27,13 +27,11 @@ hands = mp_hands.Hands(
     min_tracking_confidence=0.7
 )
 
-# --- Variáveis ---
 prev_x = None
 last_action_time = 0
 cooldown = 1.0
 gesture_text = ""
 
-# --- UI ---
 root = Tk()
 root.title("Gestos com Teclas e Combinações")
 
@@ -46,7 +44,6 @@ lbl_gesture.pack()
 frame_controls = Frame(root)
 frame_controls.pack(pady=10)
 
-# --- Listas de teclas ---
 modificadores = ["None", "ctrl", "shift", "alt"]
 teclas = [
     'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
@@ -54,13 +51,11 @@ teclas = [
     'enter','space','tab','left','right','up','down','backspace','esc'
 ]
 
-# --- Gestos configuráveis ---
 gestos = {
     "Seta Esquerda": {"active": IntVar(value=1), "mod": StringVar(value="None"), "key": StringVar(value="left")},
     "Seta Direita": {"active": IntVar(value=1), "mod": StringVar(value="None"), "key": StringVar(value="right")}
 }
 
-# --- Criar UI para cada gesto ---
 for nome, info in gestos.items():
     chk = Checkbutton(frame_controls, text=nome, variable=info["active"])
     chk.pack(anchor="w")
@@ -80,7 +75,6 @@ for nome, info in gestos.items():
 btn_quit = Button(root, text="Fechar", command=root.quit)
 btn_quit.pack(pady=5)
 
-# --- Funções ---
 def press_keys(mod, key):
     try:
         if mod == "None":
@@ -109,7 +103,6 @@ def video_loop():
                     diff_x = x - prev_x
                     current_time = time.time()
 
-                    # Seta esquerda
                     if diff_x < -50 and (current_time - last_action_time) > cooldown:
                         if gestos["Seta Esquerda"]["active"].get():
                             mod = gestos["Seta Esquerda"]["mod"].get()
@@ -118,7 +111,6 @@ def video_loop():
                             press_keys(mod, key)
                         last_action_time = current_time
 
-                    # Seta direita
                     elif diff_x > 50 and (current_time - last_action_time) > cooldown:
                         if gestos["Seta Direita"]["active"].get():
                             mod = gestos["Seta Direita"]["mod"].get()
@@ -131,7 +123,6 @@ def video_loop():
         else:
             gesture_text = ""
 
-        # Atualiza imagem da câmera
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(img)
         imgtk = ImageTk.PhotoImage(image=img)
