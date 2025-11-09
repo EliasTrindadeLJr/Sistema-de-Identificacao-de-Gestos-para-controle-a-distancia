@@ -24,10 +24,12 @@ cd seu-repositorio
 
 ### 2️⃣ Criar o Ambiente Virtual (venv)
 
+Instalar python 3.10 
+
 Crie e ative o ambiente virtual com Python 3.10:
 Windows
 
-python -m venv venv
+py -3.10 -m venv venv
 venv\Scripts\activate
 
 Linux / macOS
