@@ -1,6 +1,6 @@
 {
-    "Seta Esquerda": "None+f5",
-    "Seta Direita": "ctrl+right",
+    "Seta Esquerda": "None+left",
+    "Seta Direita": "None+right",
     "Seta Cima": "None+up",
-    "Seta Baixo": "alt+down"
+    "Seta Baixo": "None+space"
 }

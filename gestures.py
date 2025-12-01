@@ -1,38 +1,26 @@
-import gc
 import time
 import pyautogui
-import math
-from gesture_config import save_gesture_config
-
-def pinch_distance(landmarks):
-    """
-    Retorna a distância entre polegar (4) e indicador (8)
-    """
-    x1, y1 = landmarks.landmark[4].x, landmarks.landmark[4].y
-    x2, y2 = landmarks.landmark[8].x, landmarks.landmark[8].y
-    return math.hypot(x2 - x1, y2 - y1)
-
-
-def is_pinch_closed(landmarks, threshold=0.05):
-    """Pinça fechada (ativar leitura)"""
-    return pinch_distance(landmarks) < threshold
-
-
-def is_pinch_open(landmarks, threshold=0.10):
-    """Pinça aberta (desativar leitura)"""
-    return pinch_distance(landmarks) > threshold
-
 
 class GestureController:
-    def __init__(self, cooldown):
-        self.prev_x = None
-        self.prev_y = None
-        self.last_action = 0
+    def __init__(self, cooldown=0.45, move_threshold=20,
+                 zone_margin_ratio=0.2, hold_ms=100):
         self.cooldown = cooldown
-        
-        self.reading_enabled = False
-        self.last_activation = 0
-        self.activation_cooldown = 1.0  # 1 segundo de proteção para não ativar/desativar sem querer
+        self.last_action = 0
+
+        # valor mínimo de movimento para contar como gesto
+        self.move_threshold = move_threshold
+
+        # última posição registrada
+        self.last_x = None
+        self.last_y = None
+
+        # zona de detecção (fracao do frame)
+        self.zone_margin_ratio = zone_margin_ratio
+
+        # tempo mínimo que o movimento deve permanecer para disparar (ms)
+        self.hold_ms = hold_ms
+        self._gesture_start_time = None
+        self._current_direction = None
 
     def press_keys(self, mod, key):
         if mod == "None":
@@ -40,65 +28,86 @@ class GestureController:
         else:
             pyautogui.hotkey(mod, key)
 
-    def detect(self, x, y, landmarks, gestures_dict):
-        gesture = None
+    def detect(self, x, y, frame_w, frame_h, landmarks, gestures_dict):
         now = time.time()
 
-        # Ativação/desativação da leitura
-        if (now - self.last_activation) > self.activation_cooldown:
+        # -----------------------
+        # 1️⃣ DELIMITAR ZONA DE DETECÇÃO
+        # -----------------------
+        x_min = frame_w * self.zone_margin_ratio
+        x_max = frame_w * (1 - self.zone_margin_ratio)
+        y_min = frame_h * self.zone_margin_ratio
+        y_max = frame_h * (1 - self.zone_margin_ratio)
 
-            if is_pinch_closed(landmarks):
-                self.reading_enabled = True
-                self.last_activation = now
-                return "Leitura ativada"
-
-            elif is_pinch_open(landmarks):
-                self.reading_enabled = False
-                self.last_activation = now
-                return "Leitura desativada"
-
-        # Se leitura está desativada, parar aqui
-        if not self.reading_enabled:
-            self.prev_x = x
-            self.prev_y = y
+        if not (x_min <= x <= x_max and y_min <= y <= y_max):
+            # fora da zona: resetar timer
+            self._gesture_start_time = None
+            self._current_direction = None
+            self.last_x = x
+            self.last_y = y
             return None
 
-        # Detecta movimento
-        if self.prev_x is not None:
-            dx = x - self.prev_x
-            dy = y - self.prev_y if self.prev_y is not None else 0
+        # primeira leitura: apenas armazena
+        if self.last_x is None:
+            self.last_x = x
+            self.last_y = y
+            return None
 
-            if now - self.last_action > self.cooldown:
+        # -----------------------
+        # 2️⃣ DIFERENÇA DE MOVIMENTO
+        # -----------------------
+        dx = x - self.last_x
+        dy = y - self.last_y
+        self.last_x = x
+        self.last_y = y
 
-                if dx < -50 and gestures_dict["Seta Esquerda"]["active"]:
-                    gesture = "Seta Esquerda"
+        # detectar direção
+        direction = None
+        if abs(dx) > abs(dy):
+            if dx > self.move_threshold:
+                direction = "Seta Direita"
+            elif dx < -self.move_threshold:
+                direction = "Seta Esquerda"
+        else:
+            if dy < -self.move_threshold:
+                direction = "Seta Cima"
+            elif dy > self.move_threshold:
+                direction = "Seta Baixo"
 
-                elif dx > 50 and gestures_dict["Seta Direita"]["active"]:
-                    gesture = "Seta Direita"
+        if not direction or not gestures_dict[direction]["active"]:
+            # resetar temporizador se movimento não válido
+            self._gesture_start_time = None
+            self._current_direction = None
+            return None
 
-                elif dy < -50 and gestures_dict["Seta Cima"]["active"]:
-                    gesture = "Seta Cima"
+        # -----------------------
+        # 3️⃣ HOLD / HISterese
+        # -----------------------
+        now_ms = now * 1000
+        if self._current_direction != direction:
+            # nova direção: iniciar temporizador
+            self._gesture_start_time = now_ms
+            self._current_direction = direction
+            return None
 
-                elif dy > 50 and gestures_dict["Seta Baixo"]["active"]:
-                    gesture = "Seta Baixo"
+        if now_ms - self._gesture_start_time < self.hold_ms:
+            # movimento ainda não durou o suficiente
+            return None
 
-                if gesture:
-                    mod = gestures_dict[gesture]["mod"]
-                    key = gestures_dict[gesture]["key"]
+        # -----------------------
+        # cooldown
+        # -----------------------
+        if now - self.last_action < self.cooldown:
+            return None
 
-                    self.press_keys(mod, key)
-                    self.last_action = now
+        # dispara tecla
+        mod = gestures_dict[direction]["mod"]
+        key = gestures_dict[direction]["key"]
+        self.press_keys(mod, key)
+        self.last_action = now
 
-                    # SALVAR NO JSON
-                    save_gesture_config({
-                        nome: f'{info["mod"]}+{info["key"]}'
-                        for nome, info in gestures_dict.items()
-                    })
+        # resetar hold para próxima detecção
+        self._gesture_start_time = None
+        self._current_direction = None
 
-                    return gesture
-
-
-        self.prev_x = x
-        self.prev_y = y
-        return gesture
-
+        return direction

@@ -18,31 +18,33 @@ class GestureUI:
         self.video_label = tk.Label(root)
         self.video_label.pack()
 
-        tk.Label(root, textvariable=self.gesture_var, font=("Arial", 24), fg="red").pack()
+        tk.Label(root, textvariable=self.gesture_var, font=("Arial", 24), fg="red").pack(pady=5)
 
-        frame = tk.Frame(root)
-        frame.pack(pady=10)
+        # Frame principal horizontal
+        main_frame = tk.Frame(root)
+        main_frame.pack(pady=10)
 
-        for nome, info in gestos_iniciais.items():
+        for col_index, (nome, info) in enumerate(gestos_iniciais.items()):
 
-            # Criar as variáveis ANTES de carregar do JSON
+            # Variáveis Tkinter
             info["active_var"] = tk.IntVar(value=info["active"])
             info["mod_var"] = tk.StringVar(value=info["mod"])
             info["key_var"] = tk.StringVar(value=info["key"])
 
-            # Se existe configuração salva → aplicar
+            # Aplicar configuração salva
             if nome in saved:
                 mod, key = saved[nome].split("+", 1)
                 info["mod_var"].set(mod)
                 info["key_var"].set(key)
 
-            # Criar os widgets
-            tk.Checkbutton(frame, text=nome, variable=info["active_var"]).pack(anchor="w")
-            ttk.Combobox(frame, values=modificadores, textvariable=info["mod_var"], width=10).pack(anchor="w")
-            ttk.Combobox(frame, values=teclas, textvariable=info["key_var"], width=10).pack(anchor="w")
-            ttk.Separator(frame, orient="horizontal").pack(fill="x", pady=5)
+            # Frame de cada gesto (coluna)
+            gesture_frame = tk.Frame(main_frame, relief="raised", bd=1, padx=5, pady=5)
+            gesture_frame.grid(row=0, column=col_index, padx=5, sticky="n")
 
-        tk.Button(root, text="Fechar", command=root.quit).pack()
+            # Widgets horizontais dentro do frame
+            tk.Checkbutton(gesture_frame, text=nome, variable=info["active_var"]).pack(anchor="w", pady=2)
+            ttk.Combobox(gesture_frame, values=modificadores, textvariable=info["mod_var"], width=10).pack(anchor="w", pady=2)
+            ttk.Combobox(gesture_frame, values=teclas, textvariable=info["key_var"], width=10).pack(anchor="w", pady=2)
 
     def adapt_gestos(self):
         d = {}
@@ -54,7 +56,6 @@ class GestureUI:
             }
         return d
 
-
     def update_gesture_label(self, text):
         self.gesture_var.set(text)
 
@@ -64,5 +65,3 @@ class GestureUI:
         imgtk = ImageTk.PhotoImage(img)
         self.video_label.imgtk = imgtk
         self.video_label.configure(image=imgtk)
-    
-       
