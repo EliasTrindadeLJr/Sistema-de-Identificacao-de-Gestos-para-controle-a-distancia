@@ -1,67 +1,141 @@
-import tkinter as tk
-from tkinter import ttk
-from PIL import Image, ImageTk
-from config import modificadores, teclas
-from gesture_config import load_gesture_config, save_gesture_config
-from config import gestos_iniciais
+from PySide6.QtWidgets import (
+    QApplication, QWidget, QLabel, QCheckBox, QComboBox,
+    QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy
+)
+from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtCore import Qt
+
+import cv2
+from config import modificadores, teclas, gestos_iniciais
+from gesture_config import load_gesture_config
 
 saved = load_gesture_config()
 
-class GestureUI:
-    def __init__(self, root, gestures_data):
-        self.root = root
-        self.root.title("Controle por Gestos")
 
-        self.gesture_var = tk.StringVar(value="")
+class GestureUI(QWidget):
+    def __init__(self, gestures_data):
+        super().__init__()
+        self.setWindowTitle("Controle por Gestos")
+        self.setMinimumSize(1100, 650)
+
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #1e1e1e;
+                color: white;
+                font-family: 'Segoe UI';
+            }
+            QLabel#title {
+                font-size: 28px;
+                font-weight: bold;
+                color: #00d4ff;
+            }
+            QLabel#gesture {
+                font-size: 24px;
+                color: #ff6666;
+                font-weight: bold;
+            }
+            QFrame#card {
+                background-color: #2a2a2a;
+                border-radius: 12px;
+                padding: 10px;
+                border: 1px solid #3a3a3a;
+            }
+            QComboBox, QCheckBox {
+                font-size: 14px;
+            }
+            QLabel#video {
+                border: 2px solid #333;
+                border-radius: 6px;
+            }
+        """)
+
         self.gestos = gestures_data
 
-        self.video_label = tk.Label(root)
-        self.video_label.pack()
+        # --- TÍTULO ---
+        title_label = QLabel("Controle por Gestos")
+        title_label.setObjectName("title")
+        title_label.setAlignment(Qt.AlignCenter)
 
-        tk.Label(root, textvariable=self.gesture_var, font=("Arial", 24), fg="red").pack(pady=5)
+        # --- VÍDEO ---
+        self.video_label = QLabel()
+        self.video_label.setObjectName("video")
+        self.video_label.setFixedSize(720, 480)
+        self.video_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        # Frame principal horizontal
-        main_frame = tk.Frame(root)
-        main_frame.pack(pady=10)
+        # --- LABEL DO GESTO ---
+        self.gesture_label = QLabel("Nenhum gesto detectado")
+        self.gesture_label.setObjectName("gesture")
+        self.gesture_label.setAlignment(Qt.AlignCenter)
 
-        for col_index, (nome, info) in enumerate(gestos_iniciais.items()):
+        # Layout principal
+        layout = QVBoxLayout(self)
+        layout.addWidget(title_label)
+        layout.addWidget(self.video_label, alignment=Qt.AlignCenter)
+        layout.addWidget(self.gesture_label)
 
-            # Variáveis Tkinter
-            info["active_var"] = tk.IntVar(value=info["active"])
-            info["mod_var"] = tk.StringVar(value=info["mod"])
-            info["key_var"] = tk.StringVar(value=info["key"])
+        # Linha dos cards
+        main_row = QHBoxLayout()
+        main_row.setSpacing(20)
+        layout.addLayout(main_row)
 
-            # Aplicar configuração salva
+        # Criar widgets dos gestos (como cards)
+        for nome, info in gestos_iniciais.items():
+
+            info["active_var"] = info.get("active", 0)
+            info["mod_var"] = info.get("mod", "")
+            info["key_var"] = info.get("key", "")
+
             if nome in saved:
                 mod, key = saved[nome].split("+", 1)
-                info["mod_var"].set(mod)
-                info["key_var"].set(key)
+                info["mod_var"] = mod
+                info["key_var"] = key
 
-            # Frame de cada gesto (coluna)
-            gesture_frame = tk.Frame(main_frame, relief="raised", bd=1, padx=5, pady=5)
-            gesture_frame.grid(row=0, column=col_index, padx=5, sticky="n")
+            # --- CARD DO GESTO ---
+            frame = QFrame()
+            frame.setObjectName("card")
+            vbox = QVBoxLayout(frame)
+            vbox.setSpacing(10)
 
-            # Widgets horizontais dentro do frame
-            tk.Checkbutton(gesture_frame, text=nome, variable=info["active_var"]).pack(anchor="w", pady=2)
-            ttk.Combobox(gesture_frame, values=modificadores, textvariable=info["mod_var"], width=10).pack(anchor="w", pady=2)
-            ttk.Combobox(gesture_frame, values=teclas, textvariable=info["key_var"], width=10).pack(anchor="w", pady=2)
+            # CheckBox
+            cb = QCheckBox(nome)
+            cb.setChecked(info["active_var"])
+            vbox.addWidget(cb)
 
+            # Combo modificador
+            combo_mod = QComboBox()
+            combo_mod.addItems(modificadores)
+            combo_mod.setCurrentText(info["mod_var"])
+            vbox.addWidget(combo_mod)
+
+            # Combo tecla
+            combo_key = QComboBox()
+            combo_key.addItems(teclas)
+            combo_key.setCurrentText(info["key_var"])
+            vbox.addWidget(combo_key)
+
+            # Guardar widgets
+            info["active_widget"] = cb
+            info["mod_widget"] = combo_mod
+            info["key_widget"] = combo_key
+
+            main_row.addWidget(frame)
+
+    # --- Funções da UI ---
     def adapt_gestos(self):
         d = {}
         for nome, info in self.gestos.items():
             d[nome] = {
-                "active": info["active_var"].get(),
-                "mod": info["mod_var"].get(),
-                "key": info["key_var"].get()
+                "active": info["active_widget"].isChecked(),
+                "mod": info["mod_widget"].currentText(),
+                "key": info["key_widget"].currentText()
             }
         return d
 
-    def update_gesture_label(self, text):
-        self.gesture_var.set(text)
+    def update_gesture_label(self, text: str):
+        self.gesture_label.setText(text)
 
     def update_video(self, frame_bgr):
-        rgb = frame_bgr[:,:,::-1]
-        img = Image.fromarray(rgb)
-        imgtk = ImageTk.PhotoImage(img)
-        self.video_label.imgtk = imgtk
-        self.video_label.configure(image=imgtk)
+        rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        h, w, ch = rgb.shape
+        qimg = QImage(rgb.data, w, h, ch * w, QImage.Format_RGB888)
+        self.video_label.setPixmap(QPixmap.fromImage(qimg))
