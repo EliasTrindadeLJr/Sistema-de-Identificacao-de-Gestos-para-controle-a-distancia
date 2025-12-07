@@ -79,16 +79,11 @@ class GestureUI(QWidget):
         layout.addLayout(main_row)
 
         # Criar widgets dos gestos (como cards)
-        for nome, info in gestos_iniciais.items():
+        for nome, info in self.gestos.items():
 
-            info["active_var"] = info.get("active", 0)
-            info["mod_var"] = info.get("mod", "")
+            info["active_var"] = info.get("active", 1)
+            info["mod_var"] = info.get("mod", "None")
             info["key_var"] = info.get("key", "")
-
-            if nome in saved:
-                mod, key = saved[nome].split("+", 1)
-                info["mod_var"] = mod
-                info["key_var"] = key
 
             # --- CARD DO GESTO ---
             frame = QFrame()
@@ -115,8 +110,8 @@ class GestureUI(QWidget):
 
             # Guardar widgets
             info["active_widget"] = cb
-            info["mod_widget"] = combo_mod
-            info["key_widget"] = combo_key
+            info["mod_widget"]  = combo_mod
+            info["key_widget"]  = combo_key
 
             main_row.addWidget(frame)
 
