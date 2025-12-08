@@ -12,11 +12,11 @@
     "Seta Cima": {
         "active": true,
         "mod": "None",
-        "key": "up"
+        "key": "None"
     },
     "Seta Baixo": {
         "active": true,
         "mod": "None",
-        "key": "enter"
+        "key": "space"
     }
 }

@@ -2,8 +2,7 @@ import time
 import pyautogui
 
 class GestureController:
-    def __init__(self, cooldown=0.6, move_threshold=20,
-                 zone_margin_ratio=0.10, hold_ms=200, debug=True):
+    def __init__(self, cooldown=1.5, move_threshold=22,zone_margin_ratio=0.10, hold_ms=200, debug=True):
         self.cooldown = cooldown
         self.last_action = 0
 

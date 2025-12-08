@@ -14,7 +14,7 @@ class GestureUI(QWidget):
     def __init__(self, gestures_data):
         super().__init__()
         self.setWindowTitle("Controle por Gestos")
-        self.setMinimumSize(1100, 650)
+        self.setMinimumSize(1280, 720)
 
         self.setStyleSheet("""
             QWidget { background-color: #1e1e1e; color: white; }
