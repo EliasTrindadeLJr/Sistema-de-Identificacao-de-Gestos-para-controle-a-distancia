@@ -1,6 +1,22 @@
 {
-    "Seta Esquerda": "None+left",
-    "Seta Direita": "None+right",
-    "Seta Cima": "None+up",
-    "Seta Baixo": "None+space"
+    "Seta Esquerda": {
+        "active": true,
+        "mod": "None",
+        "key": "left"
+    },
+    "Seta Direita": {
+        "active": true,
+        "mod": "None",
+        "key": "right"
+    },
+    "Seta Cima": {
+        "active": true,
+        "mod": "None",
+        "key": "up"
+    },
+    "Seta Baixo": {
+        "active": true,
+        "mod": "None",
+        "key": "enter"
+    }
 }

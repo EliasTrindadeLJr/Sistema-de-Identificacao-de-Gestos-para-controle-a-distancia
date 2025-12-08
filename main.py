@@ -43,18 +43,13 @@ def process_loop():
 
     if results.multi_hand_landmarks:
         for lm in results.multi_hand_landmarks:
-
             h, w, _ = frame.shape
             x = lm.landmark[9].x * w
             y = lm.landmark[9].y * h
 
-            gestures_dict = ui.adapt_gestos()
+            gestures = ui.adapt_gestos()
 
-            gesture = gc.detect(
-                x, y, w, h,
-                lm,
-                gestures_dict
-            )
+            gesture = gc.detect(x, y, w, h, lm, gestures)
 
             if gesture:
                 gesture_text = gesture
@@ -65,9 +60,8 @@ def process_loop():
     ui.update_gesture_label(gesture_text)
 
 
-# Timer → substitui root.after()
 timer = QTimer()
 timer.timeout.connect(process_loop)
-timer.start(5)   # 5 ms como antes
+timer.start(5)
 
 sys.exit(app.exec())

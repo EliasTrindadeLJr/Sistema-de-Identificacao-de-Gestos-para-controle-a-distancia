@@ -1,3 +1,5 @@
+from gesture_config import load_gesture_config
+
 modificadores = ["None", "ctrl", "shift", "alt", "win", "fn"]
 
 teclas = [
@@ -12,5 +14,10 @@ gestos_iniciais = {
     "Seta Cima": {"mod": "None", "key": "up", "active": True},
     "Seta Baixo": {"mod": "None", "key": "down", "active": True}
 }
+
+_saved = load_gesture_config()
+for g in gestos_iniciais:
+    if g in _saved and isinstance(_saved[g], dict):
+        gestos_iniciais[g].update(_saved[g])
 
 COOLDOWN = 1.0
