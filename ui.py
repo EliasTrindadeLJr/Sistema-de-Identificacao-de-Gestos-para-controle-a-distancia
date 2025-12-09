@@ -27,34 +27,28 @@ class GestureUI(QWidget):
 
         self.gestos = gestures_data
 
-        # --- Título ---
         title_label = QLabel("Controle por Gestos")
         title_label.setObjectName("title")
         title_label.setAlignment(Qt.AlignCenter)
 
-        # --- Vídeo ---
         self.video_label = QLabel()
         self.video_label.setObjectName("video")
         self.video_label.setFixedSize(720, 480)
         self.video_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        # --- Gesto detectado ---
         self.gesture_label = QLabel("Nenhum gesto detectado")
         self.gesture_label.setObjectName("gesture")
         self.gesture_label.setAlignment(Qt.AlignCenter)
 
-        # --- Layout principal ---
         layout = QVBoxLayout(self)
         layout.addWidget(title_label)
         layout.addWidget(self.video_label, alignment=Qt.AlignCenter)
         layout.addWidget(self.gesture_label)
 
-        # Linha dos cards
         row = QHBoxLayout()
         row.setSpacing(20)
         layout.addLayout(row)
 
-        # Criar widgets dos gestos
         for nome, info in self.gestos.items():
 
             info["active_var"] = info.get("active", True)
@@ -86,15 +80,11 @@ class GestureUI(QWidget):
 
             row.addWidget(frame)
 
-    # -----------------------
-    # SALVAR AO FECHAR
-    # -----------------------
     def closeEvent(self, event):
         save_gesture_config(self.adapt_gestos())
         print("[DEBUG] gestures_config.json salvo.")
         event.accept()
 
-    # --- Atualizar dicionário ---
     def adapt_gestos(self):
         d = {}
         for nome, info in self.gestos.items():
@@ -105,11 +95,9 @@ class GestureUI(QWidget):
             }
         return d
 
-    # --- Atualizar gesto exibido ---
     def update_gesture_label(self, text):
         self.gesture_label.setText(text)
 
-    # --- Atualizar vídeo ---
     def update_video(self, frame_bgr):
         rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb.shape
