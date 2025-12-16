@@ -29,20 +29,20 @@ Instalar python 3.10
 Crie e ative o ambiente virtual com Python 3.10:
 Windows
 
-py -3.10 -m venv venv
+- py -3.10 -m venv venv
 
-venv\Scripts\activate
+- venv\Scripts\activate
 
 Linux / macOS
 
-python3.10 -m venv venv
+- python3.10 -m venv venv
 
-source venv/bin/activate (Pode variar dependendo da distro)
+- source venv/bin/activate (Pode variar dependendo da distro)
 
 ### 3️⃣ Instalar Dependências
 Execute:
 
-pip install -r requirements.txt
+- pip install -r requirements.txt
 
 ### ▶️ Como Executar
 
@@ -51,4 +51,5 @@ Após ativar o ambiente virtual e instalar as dependências, execute o script pr
 python main.py
 
 Certifique-se de que sua webcam está conectada e funcionando.
+
 
