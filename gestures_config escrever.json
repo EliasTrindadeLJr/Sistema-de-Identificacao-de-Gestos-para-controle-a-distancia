@@ -1,22 +1,22 @@
 {
     "Seta Esquerda": {
         "active": true,
-        "mod": "None",
-        "key": "left"
+        "mod": "ctrl",
+        "key": "v"
     },
     "Seta Direita": {
         "active": true,
-        "mod": "None",
-        "key": "right"
+        "mod": "ctrl",
+        "key": "c"
     },
     "Seta Cima": {
         "active": true,
-        "mod": "alt",
-        "key": "tab"
+        "mod": "ctrl",
+        "key": "a"
     },
     "Seta Baixo": {
         "active": true,
-        "mod": "ctrl",
+        "mod": "None",
         "key": "a"
     }
 }

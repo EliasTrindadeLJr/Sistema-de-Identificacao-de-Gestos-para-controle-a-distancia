@@ -33,8 +33,9 @@ class GestureUI(QWidget):
 
         self.video_label = QLabel()
         self.video_label.setObjectName("video")
-        self.video_label.setFixedSize(720, 480)
-        self.video_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.video_label.setMinimumSize(640, 480)
+        self.video_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.video_label.setAlignment(Qt.AlignCenter)
 
         self.gesture_label = QLabel("Nenhum gesto detectado")
         self.gesture_label.setObjectName("gesture")
