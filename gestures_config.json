@@ -1,6 +1,6 @@
 {
     "Seta Esquerda": {
-        "active": true,
+        "active": false,
         "mod": "None",
         "key": "left"
     },
@@ -16,7 +16,7 @@
     },
     "Seta Baixo": {
         "active": true,
-        "mod": "ctrl",
-        "key": "a"
+        "mod": "None",
+        "key": "space"
     }
 }

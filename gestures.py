@@ -25,38 +25,52 @@ class GestureController:
         self._gesture_start_time = None
         self._current_direction = None
 
-        self._pinch_active = False   # gatilho de pinça
+        self._pinch_active = False
 
-    def is_pinch(self, lm):
+    # ── Compatibilidade Tasks API ─────────────────────────────────────────────
+    @staticmethod
+    def _get_lm(landmarks, index):
+        """
+        Aceita tanto a nova Tasks API (lista plana de NormalizedLandmark)
+        quanto o proto legado (objeto com atributo .landmark[]).
+        """
+        try:
+            # Tasks API: landmarks é uma lista direta
+            return landmarks[index]
+        except TypeError:
+            # Legacy API: landmarks tem atributo .landmark
+            return landmarks.landmark[index]
+
+    # ── Detecção de pinça ─────────────────────────────────────────────────────
+    def is_pinch(self, landmarks):
         """Retorna True quando polegar e indicador estão próximos."""
-        # pontas dos dedos
-        ix, iy = lm.landmark[8].x, lm.landmark[8].y   # indicador
-        tx, ty = lm.landmark[4].x, lm.landmark[4].y   # polegar
+        tip_index = self._get_lm(landmarks, 8)   # indicador
+        tip_thumb  = self._get_lm(landmarks, 4)   # polegar
 
-        # distância euclidiana normalizada
-        dist = ((ix - tx)**2 + (iy - ty)**2)**0.5
+        dist = ((tip_index.x - tip_thumb.x) ** 2 +
+                (tip_index.y - tip_thumb.y) ** 2) ** 0.5
 
-        return dist < 0.06  # limite ideal p/ 720p – estável para todos os gestos
+        return dist < 0.06
 
-
+    # ── Resets ────────────────────────────────────────────────────────────────
     def _hard_reset(self):
         self._start_x = None
         self._start_y = None
         self._gesture_start_time = None
         self._current_direction = None
 
-
     def _soft_reset(self):
         self._gesture_start_time = None
         self._current_direction = None
 
-
+    # ── Ação de teclado ───────────────────────────────────────────────────────
     def press_keys(self, mod, key):
         if mod is None or mod == "None":
             pyautogui.press(key)
         else:
             pyautogui.hotkey(mod, key)
 
+    # ── Loop principal ────────────────────────────────────────────────────────
     def detect(self, x, y, frame_w, frame_h, landmarks=None, gestures_dict=None):
         now = time.time()
 
