@@ -12,6 +12,7 @@ from gestures import GestureController
 from ui import GestureUI
 from config import gestos_iniciais, COOLDOWN
 
+
 MODEL_PATH = "hand_landmarker.task"
 MODEL_URL  = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task"
 
@@ -21,6 +22,20 @@ if not os.path.exists(MODEL_PATH):
     print("[INFO] Download concluído.")
 
 print("[DEBUG] Abrindo câmera...")
+
+def change_camera(index):
+    global cap
+
+    if index < 0:
+        return
+
+    print("Trocando para câmera:", index)
+
+    if cap:
+        cap.release()
+
+    cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)   # CAP_DSHOW é mais estável no Windows
 if not cap.isOpened():
     print("[ERRO] Câmera não encontrada! Verifique se está conectada e não está em uso.")
@@ -63,18 +78,20 @@ options = HandLandmarkerOptions(
     result_callback=result_callback,
 )
 landmarker = mp_vision.HandLandmarker.create_from_options(options)
-print("[DEBUG] HandLandmarker criado com sucesso.")
+
+
+
 
 app = QApplication(sys.argv)
 ui = GestureUI(gestos_iniciais)
+ui.camera_changed = change_camera
 gc = GestureController(COOLDOWN)
 ui.show()
 app.processEvents()   # força a janela aparecer antes do timer começar
 print("[DEBUG] UI exibida.")
 
-frame_timestamp_ms: int = 0
+frame_timestamp_ms = 0
 frame_count = 0
-
 
 def draw_landmarks(frame, hand_landmarks_list):
     h, w, _ = frame.shape
@@ -84,7 +101,6 @@ def draw_landmarks(frame, hand_landmarks_list):
             cv2.line(frame, pts[a], pts[b], (255, 255, 255), 2)
         for pt in pts:
             cv2.circle(frame, pt, 4, (0, 255, 0), -1)
-
 
 def process_loop():
     global frame_timestamp_ms, frame_count

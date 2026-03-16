@@ -85,14 +85,25 @@ class GestureUI(QWidget):
         layout.addWidget(self.list_widget)
         layout.addLayout(row)
 
+    def select_cam(self,index):
+        if index < 0:
+            return
+
+        self.camera_index = index
+
+        if hasattr(self, "camera_changed"):
+            self.camera_changed(index)
+
     def cameralist(self):
         self.list_widget = QListWidget(self)
-        self.list_widget.setGeometry(10, 10, 280, 180)
+        self.list_widget.setFixedHeight(120)
 
         cameras = camera_extract()
 
         for index,cam in enumerate (cameras):
             self.list_widget.addItem(f"{index}: {cam}")
+
+        self.list_widget.currentRowChanged.connect(self.select_cam)
 
     def closeEvent(self, event):
         save_gesture_config(self.adapt_gestos())
