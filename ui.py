@@ -7,8 +7,7 @@ from PySide6.QtCore import Qt
 import cv2
 from config import modificadores, teclas
 from gesture_config import save_gesture_config
-from camera import camera_extract 
-
+from camera import get_default_camera as camera_default
 
 class GestureUI(QWidget):
     def __init__(self, gestures_data):
@@ -98,10 +97,18 @@ class GestureUI(QWidget):
         self.list_widget = QListWidget(self)
         self.list_widget.setFixedHeight(120)
 
-        cameras = camera_extract()
+        cameras = camera_default()  # Retorna lista de nomes de câmeras
+        if not cameras:
+            cameras = ["Câmera não encontrada"]
 
-        for index,cam in enumerate (cameras):
+        for index, cam in enumerate(cameras):
             self.list_widget.addItem(f"{index}: {cam}")
+
+        # Seleciona a primeira câmera por padrão
+        self.list_widget.setCurrentRow(0)
+        self.camera_index = 0
+        if hasattr(self, "camera_changed"):
+            self.camera_changed(0)
 
         self.list_widget.currentRowChanged.connect(self.select_cam)
 
