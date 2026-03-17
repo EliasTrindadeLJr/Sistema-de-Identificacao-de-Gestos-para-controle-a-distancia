@@ -30,11 +30,9 @@ class GestureUI(QWidget):
         title_label.setObjectName("title")
         title_label.setAlignment(Qt.AlignCenter)
         title_label.setFixedHeight(40)
-        title_label.setFixedHeight(40)
 
-        self.video_label = QLabel("Aguardando câmera...""Aguardando câmera...")
+        self.video_label = QLabel("Aguardando câmera...")
         self.video_label.setObjectName("video")
-        self.video_label.setFixedSize(854, 480)   # 16:9 fixo — garante espaço antes do 1º frame
         self.video_label.setFixedSize(854, 480)   # 16:9 
         self.video_label.setAlignment(Qt.AlignCenter)
 
@@ -42,9 +40,7 @@ class GestureUI(QWidget):
         self.gesture_label.setObjectName("gesture")
         self.gesture_label.setAlignment(Qt.AlignCenter)
         self.gesture_label.setFixedHeight(36)
-        self.gesture_label.setFixedHeight(36)
 
-        # ── Cards de configuração ──────────────────────────────────────────
         # Cards de configuração 
         row = QHBoxLayout()
         row.setSpacing(20)
@@ -76,27 +72,44 @@ class GestureUI(QWidget):
             info["active_widget"] = cb
             info["mod_widget"]    = combo_mod
             info["key_widget"]    = combo_key
-            info["mod_widget"]    = combo_mod
-            info["key_widget"]    = combo_key
 
             row.addWidget(frame)
 
-        # ── Layout principal ───────────────────────────────────────────────
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(10)
         layout.addWidget(title_label)
         layout.addWidget(self.video_label, alignment=Qt.AlignHCenter)
         layout.addWidget(self.gesture_label)
+        self.cameralist()
+        layout.addWidget(self.list_widget)
         layout.addLayout(row)
 
-    # ── Eventos ───────────────────────────────────────────────────────────────
+    def select_cam(self,index):
+        if index < 0:
+            return
+
+        self.camera_index = index
+
+        if hasattr(self, "camera_changed"):
+            self.camera_changed(index)
+
+    def cameralist(self):
+        self.list_widget = QListWidget(self)
+        self.list_widget.setFixedHeight(120)
+
+        cameras = camera_extract()
+
+        for index,cam in enumerate (cameras):
+            self.list_widget.addItem(f"{index}: {cam}")
+
+        self.list_widget.currentRowChanged.connect(self.select_cam)
+
     def closeEvent(self, event):
         save_gesture_config(self.adapt_gestos())
         print("[DEBUG] gestures_config.json salvo.")
         event.accept()
 
-    # ── Helpers ───────────────────────────────────────────────────────────────
     def adapt_gestos(self):
         d = {}
         for nome, info in self.gestos.items():
