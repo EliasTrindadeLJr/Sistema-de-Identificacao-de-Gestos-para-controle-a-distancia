@@ -3,7 +3,7 @@ import pyautogui
 
 
 class GestureController:
-    def __init__(self, cooldown=1.5, move_threshold=20,
+    def __init__(self, cooldown=1.5, move_threshold=15,
                  zone_margin_ratio=0.15, hold_ms=150,
                  direction_tolerance=3, debug=True):
 
@@ -24,6 +24,7 @@ class GestureController:
 
         self._gesture_start_time = None
         self._current_direction = None
+        
 
         self._pinch_active = False
 

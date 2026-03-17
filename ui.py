@@ -1,12 +1,13 @@
 from PySide6.QtWidgets import (
     QWidget, QLabel, QCheckBox, QComboBox,
-    QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy
+    QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy,QListWidget
 )
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtCore import Qt
 import cv2
 from config import modificadores, teclas
 from gesture_config import save_gesture_config
+from camera import camera_extract 
 
 
 class GestureUI(QWidget):
@@ -29,18 +30,22 @@ class GestureUI(QWidget):
         title_label.setObjectName("title")
         title_label.setAlignment(Qt.AlignCenter)
         title_label.setFixedHeight(40)
+        title_label.setFixedHeight(40)
 
-        self.video_label = QLabel("Aguardando câmera...")
+        self.video_label = QLabel("Aguardando câmera...""Aguardando câmera...")
         self.video_label.setObjectName("video")
         self.video_label.setFixedSize(854, 480)   # 16:9 fixo — garante espaço antes do 1º frame
+        self.video_label.setFixedSize(854, 480)   # 16:9 
         self.video_label.setAlignment(Qt.AlignCenter)
 
         self.gesture_label = QLabel("Nenhum gesto detectado")
         self.gesture_label.setObjectName("gesture")
         self.gesture_label.setAlignment(Qt.AlignCenter)
         self.gesture_label.setFixedHeight(36)
+        self.gesture_label.setFixedHeight(36)
 
         # ── Cards de configuração ──────────────────────────────────────────
+        # Cards de configuração 
         row = QHBoxLayout()
         row.setSpacing(20)
 
@@ -69,6 +74,8 @@ class GestureUI(QWidget):
             vbox.addWidget(combo_key)
 
             info["active_widget"] = cb
+            info["mod_widget"]    = combo_mod
+            info["key_widget"]    = combo_key
             info["mod_widget"]    = combo_mod
             info["key_widget"]    = combo_key
 
