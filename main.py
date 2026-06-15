@@ -3,6 +3,7 @@ import sys
 import os
 import urllib.request
 import cv2
+import time
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
@@ -97,9 +98,19 @@ HAND_CONNECTIONS = [
 
 latest_result: HandLandmarkerResult | None = None # type: ignore
 
+processing_frame = False
+
+fps_counter = 0
+fps_timer = time.time()
+
+SHOW_LANDMARKS = True
+
 def result_callback(result, output_image, timestamp_ms):
     global latest_result
+    global processing_frame
+
     latest_result = result
+    processing_frame = False
 
 options = HandLandmarkerOptions(
     base_options=mp_python.BaseOptions(model_asset_path=MODEL_PATH),
@@ -135,41 +146,127 @@ def draw_landmarks(frame, hand_landmarks_list):
             cv2.circle(frame, pt, 4, (0, 255, 0), -1)
 
 def process_loop():
-    global frame_timestamp_ms, frame_count
+    global frame_count
+    global processing_frame
+    global fps_counter
+    global fps_timer
 
     if cap is None:
         return
 
     ret, frame = cap.read()
+
     if not ret or frame is None:
-        print("[WARN] cap.read() falhou, pulando frame.")
         return
 
     frame_count += 1
-    if frame_count <= 3:
-        print(f"[DEBUG] Frame {frame_count} capturado: {frame.shape}")
 
     frame = cv2.flip(frame, 1)
-    frame_timestamp_ms += 16
 
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-    landmarker.detect_async(mp_image, frame_timestamp_ms)
+    timestamp_ms = int(time.time() * 1000)
+
+    # Envia novo frame apenas se o anterior terminou
+    if not processing_frame:
+
+        processing_frame = True
+
+        rgb = cv2.cvtColor(
+            frame,
+            cv2.COLOR_BGR2RGB
+        )
+
+        mp_image = mp.Image(
+            image_format=mp.ImageFormat.SRGB,
+            data=rgb
+        )
+
+        landmarker.detect_async(
+            mp_image,
+            timestamp_ms
+        )
 
     gesture_text = ""
+    pinch_active = False
+
     if latest_result and latest_result.hand_landmarks:
+
         h, w, _ = frame.shape
+
+        gestures = ui.adapt_gestos()
+
         for lm_list in latest_result.hand_landmarks:
+
+            # ---------------------------
+            # Indicador de pinça
+            # ---------------------------
+
+            tip_index = lm_list[8]
+            tip_thumb = lm_list[4]
+
+            dist = (
+                (tip_index.x - tip_thumb.x) ** 2 +
+                (tip_index.y - tip_thumb.y) ** 2
+            ) ** 0.5
+
+            if dist < 0.06:
+                pinch_active = True
+
+            # ---------------------------
+            # Controle de gestos
+            # ---------------------------
+
             x = lm_list[9].x * w
             y = lm_list[9].y * h
-            gestures = ui.adapt_gestos()
-            gesture = gc.detect(x, y, w, h, lm_list, gestures)
+
+            gesture = gc.detect(
+                x,
+                y,
+                w,
+                h,
+                lm_list,
+                gestures
+            )
+
             if gesture:
                 gesture_text = gesture
-        draw_landmarks(frame, latest_result.hand_landmarks)
+
+        if SHOW_LANDMARKS:
+            draw_landmarks(
+                frame,
+                latest_result.hand_landmarks
+            )
+
+    # ---------------------------
+    # Atualiza UI
+    # ---------------------------
 
     ui.update_video(frame)
-    ui.update_gesture_label(gesture_text)
+
+    ui.update_pinch_status(
+        pinch_active
+    )
+
+    if gesture_text:
+        ui.update_gesture_label(
+            gesture_text
+        )
+
+    # ---------------------------
+    # FPS
+    # ---------------------------
+
+    """ fps_counter += 1
+
+    now = time.time()
+
+    if now - fps_timer >= 1:
+
+        print(
+            f"FPS REAL: {fps_counter}"
+        )
+
+        fps_counter = 0
+        fps_timer = now """
 
 # ---------- Timer para loop de captura ----------
 timer = QTimer()

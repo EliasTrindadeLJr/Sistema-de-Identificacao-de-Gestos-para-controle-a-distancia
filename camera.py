@@ -1,30 +1,7 @@
-import sys
 import cv2
-import os
+import sys
 
-cap = None  # variável global da câmera
-
-def get_default_camera():
-    """
-    Retorna o índice e nome da câmera padrão.
-    - Linux/macOS: /dev/video0
-    - Windows: primeira câmera via pygrabber
-    """
-    if sys.platform == "win32":
-        try:
-            from pygrabber.dshow_graph import FilterGraph
-            graph = FilterGraph()
-            devices = graph.get_input_devices()
-            if devices:
-                return 0, devices[0]  # índice + nome
-        except Exception as e:
-            print(f"[ERRO] PyGrabber não disponível: {e}")
-            return None
-    else:
-        default_dev = "/dev/video0"
-        if os.path.exists(default_dev):
-            return 0, default_dev
-        return None
+cap = None
 
 def change_camera(index):
     global cap
@@ -35,19 +12,45 @@ def change_camera(index):
 
     print(f"[DEBUG] Trocando para câmera {index}")
 
-    if cap:
+    if cap is not None:
         cap.release()
 
+    # Windows
     if sys.platform == "win32":
         cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+
+    # Linux
     else:
-        cap = cv2.VideoCapture(index)  # Linux/macOS
+        cap = cv2.VideoCapture(index, cv2.CAP_V4L2)
 
     if not cap.isOpened():
         print(f"[ERRO] Câmera {index} não encontrada ou ocupada")
         cap = None
-    else:
-        print(f"[DEBUG] Câmera {index} aberta com sucesso")
-        cap.set(cv2.CAP_PROP_FPS, 60)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        return
+
+    print(f"[DEBUG] Câmera {index} aberta com sucesso")
+
+    # MJPEG costuma reduzir uso de CPU e aumentar FPS
+    cap.set(
+        cv2.CAP_PROP_FOURCC,
+        cv2.VideoWriter_fourcc(*"MJPG")
+    )
+
+    # Tente 640x480 primeiro
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    # Solicita 60 FPS
+    cap.set(cv2.CAP_PROP_FPS, 60)
+
+    # Opcional: reduzir buffer para diminuir latência
+    try:
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    except Exception:
+        pass
+
+    print("\n=== Configuração Aplicada ===")
+    print("Largura :", int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
+    print("Altura  :", int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    print("FPS     :", cap.get(cv2.CAP_PROP_FPS))
+    print("============================\n")
