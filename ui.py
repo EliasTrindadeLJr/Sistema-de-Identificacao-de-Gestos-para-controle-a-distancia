@@ -261,7 +261,7 @@ class GestureUI(QWidget):
         pixmap = pixmap.scaled(
             self.video_label.width(),
             self.video_label.height(),
-            Qt.KeepAspectRatioByExpanding,
+            Qt.KeepAspectRatio,
             Qt.FastTransformation
         )
 
